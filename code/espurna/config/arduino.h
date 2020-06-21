@@ -201,6 +201,7 @@
 //--------------------------------------------------------------------------------
 
 //#define ADE7953_SUPPORT        1
+//#define ADS1X15_SUPPORT        1
 //#define AM2320_SUPPORT         1
 //#define ANALOG_SUPPORT         1
 //#define BH1750_SUPPORT         1

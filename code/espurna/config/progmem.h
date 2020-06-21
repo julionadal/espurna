@@ -174,6 +174,9 @@ PROGMEM const char espurna_ota_modules[] =
 #if SENSOR_SUPPORT
 
 PROGMEM const char espurna_sensors[] =
+    #if ADS1X15_SUPPORT
+        "ADX1X15 "
+    #endif
     #if AM2320_SUPPORT
         "AM2320_I2C "
     #endif

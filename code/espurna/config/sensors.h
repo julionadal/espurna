@@ -70,6 +70,20 @@
 // =============================================================================
 
 //------------------------------------------------------------------------------
+// ADS1X15 Sensor over I2C
+// Enable support by passing ADS1X15_SUPPORT=1 build flag
+//------------------------------------------------------------------------------
+
+#ifndef ADS1X15_SUPPORT
+#define ADS1X15_SUPPORT                 0       // Do not build support by default
+#endif
+
+#define ADS1X15_I2C_ADDRESS             0x00    // 0x00 means auto
+#define ADS1X15_TYPE                    ADS1X15_CHIP_ADS1115
+#define ADS1X15_GAIN                    ADS1X15_REG_CONFIG_PGA_4_096V
+#define ADS1X15_MASK                    0x0F    // A0=1 A1=2 A2=4 A3=8
+
+//------------------------------------------------------------------------------
 // AM2320 Humidity & Temperature sensor over I2C
 // Enable support by passing AM2320_SUPPORT=1 build flag
 //------------------------------------------------------------------------------
@@ -1201,6 +1215,7 @@
 
 #ifndef SENSOR_SUPPORT
 #define SENSOR_SUPPORT ( \
+    ADS1X15_SUPPORT || \
     AM2320_SUPPORT || \
     ANALOG_SUPPORT || \
     BH1750_SUPPORT || \
@@ -1293,6 +1308,10 @@
 //--------------------------------------------------------------------------------
 
 #if SENSOR_SUPPORT
+
+#if ADS1X15_SUPPORT
+    #include "../sensors/ADS1X15Sensor.h"
+#endif
 
 #if AM2320_SUPPORT
     #include "../sensors/AM2320Sensor.h"

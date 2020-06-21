@@ -737,6 +737,22 @@ void _sensorLoad() {
     }
     #endif
 
+    #if ADS1X15_SUPPORT
+    {
+        ADS1X15Sensor * sensor = new ADS1X15Sensor();
+        sensor->setAddress(EMON_ADS1X15_I2C_ADDRESS);
+        sensor->setType(EMON_ADS1X15_TYPE);
+        sensor->setMask(EMON_ADS1X15_MASK);
+        sensor->setGain(EMON_ADS1X15_GAIN);
+        sensor->setVoltage(EMON_MAINS_VOLTAGE);
+        sensor->setCurrentRatio(0, EMON_CURRENT_RATIO);
+        sensor->setCurrentRatio(1, EMON_CURRENT_RATIO);
+        sensor->setCurrentRatio(2, EMON_CURRENT_RATIO);
+        sensor->setCurrentRatio(3, EMON_CURRENT_RATIO);
+        _sensors.push_back(sensor);
+    }
+    #endif
+
     #if EMON_ANALOG_SUPPORT
     {
         EmonAnalogSensor * sensor = new EmonAnalogSensor();
@@ -1333,6 +1349,17 @@ void _sensorConfigure() {
             }
 
         #endif // MICS5525_SUPPORT
+
+        #if ADS1X15_SUPPORT
+            if (_sensors[i]->getID() == SENSOR_ADS1X15_ID) {
+                ADS1X15Sensor * sensor = (ADS1X15Sensor *) _sensors[i];
+                if (getSetting("pwrResetE", 0).toInt() == 1) {
+                    sensor->resetEnergy();
+                    delSetting("eneTotal", 0);
+                    _sensorResetTS();
+                }
+            }
+        #endif
 
         #if EMON_ANALOG_SUPPORT
 
