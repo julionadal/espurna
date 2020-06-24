@@ -1,14 +1,19 @@
 // -----------------------------------------------------------------------------
 // ADS1X15 Sensor over I2C
-// Copyright (C) 2017-2019 by Xose Pérez <xose dot perez at gmail dot com>
+// Copyright (C) 2020 by Julio Nadal
 // -----------------------------------------------------------------------------
 
 #if SENSOR_SUPPORT && ADS1X15_SUPPORT
 
 #pragma once
 
+#undef I2C_SUPPORT
+#define I2C_SUPPORT 1 // Explicitly request I2C support.
+
 #include "Arduino.h"
-#include "RawSensor.h"
+#include "I2CSensor.h"
+
+#define MAGNITUDE_VOLTAGE_DECIMALS 4
 
 #define ADS1X15_CHANNELS                (4)
 
@@ -91,7 +96,7 @@
 #define ADS1X15_REG_CONFIG_CQUE_4CONV   (0x0002)  // Assert ALERT/RDY after four conversions
 #define ADS1X15_REG_CONFIG_CQUE_NONE    (0x0003)  // Disable the comparator and put ALERT/RDY in high state (default)
 
-class ADS1X15Sensor : public RawSensor {
+class ADS1X15Sensor : public I2CSensor {
 
     public:
 
@@ -99,10 +104,19 @@ class ADS1X15Sensor : public RawSensor {
         // Public
         // ---------------------------------------------------------------------
 
-        ADS1X15Sensor(): RawSensor() {
+        ADS1X15Sensor(): I2CSensor() {
             _channels = ADS1X15_CHANNELS;
             _sensor_id = SENSOR_ADS1X15_ID;
-            init();
+            #if ADS1X15_REPORT_DIGITAL
+                ++_magnitudes;
+            #endif
+            #if ADS1X15_REPORT_VOLTAGE
+                ++_magnitudes;
+            #endif
+            #if ADS1X15_REPORT_CUSTOM
+                ++_magnitudes;
+            #endif
+            _digital = new int[_channels];
         }
 
         // ---------------------------------------------------------------------
@@ -126,6 +140,10 @@ class ADS1X15Sensor : public RawSensor {
         }
 
         // ---------------------------------------------------------------------
+
+        unsigned char getChannels() {
+            return _channels;
+        }
 
         unsigned char getType() {
             return _type;
@@ -166,15 +184,15 @@ class ADS1X15Sensor : public RawSensor {
             _resolution = ADS1X15_RESOLUTION;
 
             // Reference based on gain
-            if (_gain == ADS1X15_REG_CONFIG_PGA_6_144V) _reference = 12.288;
-            if (_gain == ADS1X15_REG_CONFIG_PGA_4_096V) _reference = 8.192;
-            if (_gain == ADS1X15_REG_CONFIG_PGA_2_048V) _reference = 4.096;
-            if (_gain == ADS1X15_REG_CONFIG_PGA_1_024V) _reference = 2.048;
-            if (_gain == ADS1X15_REG_CONFIG_PGA_0_512V) _reference = 1.024;
-            if (_gain == ADS1X15_REG_CONFIG_PGA_0_256V) _reference = 0.512;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_6_144V) _reference = 6.144;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_4_096V) _reference = 4.096;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_2_048V) _reference = 2.048;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_1_024V) _reference = 1.024;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_0_512V) _reference = 0.512;
+            if (_gain == ADS1X15_REG_CONFIG_PGA_0_256V) _reference = 0.256;
 
-            // Call the parent class method
-            RawSensor::begin();
+            _ready = true;
+            _dirty = false;
 
             // warmup all channels
             warmup();
@@ -208,14 +226,14 @@ class ADS1X15Sensor : public RawSensor {
         unsigned char type(unsigned char index) {
             unsigned char magnitude = index / _ports;
             unsigned char i=0;
-            #if EMON_REPORT_CURRENT
+            #if ADS1X15_REPORT_DIGITAL
                 if (magnitude == i++) return MAGNITUDE_DIGITAL;
             #endif
-            #if EMON_REPORT_POWER
-                if (magnitude == i++) return MAGNITUDE_POWER_APPARENT;
+            #if ADS1X15_REPORT_VOLTAGE
+                if (magnitude == i++) return MAGNITUDE_VOLTAGE;
             #endif
-            #if EMON_REPORT_ENERGY
-                if (magnitude == i) return MAGNITUDE_ENERGY;
+            #if ADS1X15_REPORT_CUSTOM
+                if (magnitude == i++) return getCustomMagnitude(index);
             #endif
             return MAGNITUDE_NONE;
         }
@@ -224,10 +242,7 @@ class ADS1X15Sensor : public RawSensor {
             static unsigned long last = 0;
             for (unsigned char port=0; port<_ports; port++) {
                 unsigned char channel = getChannel(port);
-                _current[port] = getCurrent(channel);
-                #if EMON_REPORT_ENERGY
-                    _energy[port] += (_current[port] * _voltage * (millis() - last) / 1000);
-                #endif
+                _digital[port] = getDigitalValue(channel);
             }
             last = millis();
             _error = SENSOR_ERROR_OK;
@@ -238,14 +253,14 @@ class ADS1X15Sensor : public RawSensor {
             unsigned char port = index % _ports;
             unsigned char magnitude = index / _ports;
             unsigned char i=0;
-            #if EMON_REPORT_CURRENT
-                if (magnitude == i++) return _current[port];
+            #if ADS1X15_REPORT_DIGITAL
+                if (magnitude == i++) return _digital[port];
             #endif
-            #if EMON_REPORT_POWER
-                if (magnitude == i++) return _current[port] * _voltage;
+            #if ADS1X15_REPORT_VOLTAGE
+                if (magnitude == i++) return ((double)_digital[port] / (double)_max_value) * _reference;
             #endif
-            #if EMON_REPORT_ENERGY
-                if (magnitude == i) return _energy[port];
+            #if ADS1X15_REPORT_CUSTOM
+                if (magnitude == i++) return getCustomValue(index, _digital[port]);
             #endif
             return 0;
         }
@@ -269,11 +284,42 @@ class ADS1X15Sensor : public RawSensor {
             return 0;
         }
 
+        unsigned char getCustomMagnitude(unsigned char index){
+            unsigned char channel = getChannel(index % _ports);
+            switch (channel) {
+                case 0:
+                    return ADS1X15_A0_MAGNITUDE;
+                case 1:
+                    return ADS1X15_A1_MAGNITUDE;
+                case 2:
+                    return ADS1X15_A2_MAGNITUDE;
+                case 3:
+                    return ADS1X15_A3_MAGNITUDE;
+                default:
+                    return MAGNITUDE_NONE;
+            }
+        }
+
+        double getCustomValue(unsigned char index, int digital){
+            unsigned char channel = getChannel(index % _ports);
+            switch (channel) {
+                case 0:
+                    return (digital + ADS1X15_A0_OFFSET) * ADS1X15_A0_FACTOR;
+                case 1:
+                    return (digital + ADS1X15_A1_OFFSET) * ADS1X15_A1_FACTOR;
+                case 2:
+                    return (digital + ADS1X15_A2_OFFSET) * ADS1X15_A2_FACTOR;
+                case 3:
+                    return (digital + ADS1X15_A3_OFFSET) * ADS1X15_A3_FACTOR;
+                default:
+                    return digital;
+            }
+        }
+
         void warmup() {
             for (unsigned char port=0; port<_ports; port++) {
                 unsigned char channel = getChannel(port);
-                _pivot[channel] = _adc_counts >> 1;
-                getCurrent(channel);
+                getDigitalValue(channel);
             }
         }
 
@@ -306,7 +352,7 @@ class ADS1X15Sensor : public RawSensor {
 
         }
 
-        double getCurrent(unsigned char channel) {
+        int getDigitalValue(unsigned char channel) {
 
             // Force stop by setting single mode and back to continuous
             static unsigned char previous = 9;
@@ -320,11 +366,11 @@ class ADS1X15Sensor : public RawSensor {
             }
             setConfigRegistry(channel, true, true);
 
-            return read(channel);
+            return readADC(channel);
 
         }
 
-        unsigned int readADC(unsigned char channel) {
+        int readADC(unsigned char channel) {
             UNUSED(channel);
             int value = i2c_read_int16(_address, ADS1X15_REG_POINTER_CONVERT);
             if (_type == ADS1X15_CHIP_ADS1015) value >>= ADS1015_BIT_SHIFT;
@@ -332,12 +378,19 @@ class ADS1X15Sensor : public RawSensor {
             return value;
         }
 
+        double _reference = 0; 
         unsigned char _type = ADS1X15_CHIP_ADS1115;
+        unsigned char _resolution = 10;                 // ADC resolution in bits
+        unsigned int _max_value = 0x7FFF;
         unsigned char _mask = 0x0F;
         unsigned int _gain = ADS1X15_REG_CONFIG_PGA_4_096V;
         unsigned char _ports;
 
+        unsigned char _channels = 0;                    // Number of ADC channels available
+        unsigned char _magnitudes = 0;                  // Number of magnitudes per channel
 
+
+        int * _digital;
 };
 
 #endif // SENSOR_SUPPORT && ADS1X15_SUPPORT

@@ -348,8 +348,16 @@
 #define MAGNITUDE_CO                29
 #define MAGNITUDE_RESISTANCE        30
 #define MAGNITUDE_PH                31
+#define MAGNITUDE_PRESSURE_PSI      32
+#define MAGNITUDE_TDS               33
 
-#define MAGNITUDE_MAX               32
+#define MAGNITUDE_MAX               34
+
+//--------------------------------------------------------------------------------
+// Magnitudes DECIMALS
+// These should remain over time, do not modify their values, only add new ones at the end
+//--------------------------------------------------------------------------------
+#define MAGNITUDE_VOLTAGE_DECIMALS   0
 
 //------------------------------------------------------------------------------
 // Telnet server

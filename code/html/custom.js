@@ -70,7 +70,7 @@ function magnitudeType(type) {
         "PM1.0", "PM2.5", "PM10", "CO2", "Lux", "UVA", "UVB", "UV Index", "Distance" , "HCHO",
         "Local Dose Rate", "Local Dose Rate",
         "Count",
-        "NO2", "CO", "Resistance", "pH"
+        "NO2", "CO", "Resistance", "pH", "Pressure", "TDS"
     ];
     if (1 <= type && type <= types.length) {
         return types[type - 1];

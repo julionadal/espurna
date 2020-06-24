@@ -294,7 +294,7 @@ PROGMEM const char espurna_sensors[] =
 PROGMEM const unsigned char magnitude_decimals[] = {
     0,
     1, 0, 2, // THP
-    3, 0, 0, 0, 0, 0, 0, 0, // Power decimals
+    3, MAGNITUDE_VOLTAGE_DECIMALS, 0, 0, 0, 0, 0, 0, // Power decimals
     0, 0, 0, // analog, digital, event
     0, 0, 0, // PM
     0, 0,
@@ -302,7 +302,8 @@ PROGMEM const unsigned char magnitude_decimals[] = {
     3, 0,
     4, 4, // Geiger Counter decimals
     0,
-    0, 0, 0, 3    // NO2, CO, Ohms, pH
+    0, 0, 0, 3,    // NO2, CO, Ohms, pH
+    1, 0
 };
 
 PROGMEM const char magnitude_unknown_topic[] = "unknown";
@@ -337,6 +338,7 @@ PROGMEM const char magnitude_no2_topic[] = "no2";
 PROGMEM const char magnitude_co_topic[] = "co";
 PROGMEM const char magnitude_resistance_topic[] = "resistance";
 PROGMEM const char magnitude_ph_topic[] = "ph";
+PROGMEM const char magnitude_tds_topic[] = "tds";
 
 PROGMEM const char* const magnitude_topics[] = {
     magnitude_unknown_topic, magnitude_temperature_topic, magnitude_humidity_topic,
@@ -350,7 +352,8 @@ PROGMEM const char* const magnitude_topics[] = {
     magnitude_distance_topic, magnitude_hcho_topic,
     magnitude_geiger_cpm_topic, magnitude_geiger_sv_topic,
     magnitude_count_topic,
-    magnitude_no2_topic, magnitude_co_topic, magnitude_resistance_topic, magnitude_ph_topic
+    magnitude_no2_topic, magnitude_co_topic, magnitude_resistance_topic, magnitude_ph_topic,
+    magnitude_pressure_topic, magnitude_tds_topic
 };
 
 PROGMEM const char magnitude_empty[] = "";
@@ -372,6 +375,7 @@ PROGMEM const char magnitude_mgm3[] = "mg/m³";
 PROGMEM const char magnitude_geiger_cpm[] = "cpm";    // Counts per Minute: Unit of local dose rate (Geiger counting)
 PROGMEM const char magnitude_geiger_sv[] = "µSv/h";   // µSievert per hour: 2nd unit of local dose rate (Geiger counting)
 PROGMEM const char magnitude_resistance[] = "ohm";
+PROGMEM const char magnitude_psi[] = "psi";
 
 
 PROGMEM const char* const magnitude_units[] = {
@@ -388,7 +392,9 @@ PROGMEM const char* const magnitude_units[] = {
     magnitude_empty,                                            //
     magnitude_ppm, magnitude_ppm,                               // NO2 & CO2
     magnitude_resistance,
-    magnitude_empty                                             // pH
+    magnitude_empty,                                            // pH
+    magnitude_psi,
+    magnitude_ppm
 };
 
 #endif

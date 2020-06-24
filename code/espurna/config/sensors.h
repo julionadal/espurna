@@ -78,10 +78,86 @@
 #define ADS1X15_SUPPORT                 0       // Do not build support by default
 #endif
 
+#ifndef ADS1X15_I2C_ADDRESS
 #define ADS1X15_I2C_ADDRESS             0x00    // 0x00 means auto
+#endif
+
+#ifndef ADS1X15_TYPE
 #define ADS1X15_TYPE                    ADS1X15_CHIP_ADS1115
+#endif
+
+#ifndef ADS1X15_GAIN
 #define ADS1X15_GAIN                    ADS1X15_REG_CONFIG_PGA_4_096V
+#endif
+
+#ifndef ADS1X15_MASK
 #define ADS1X15_MASK                    0x0F    // A0=1 A1=2 A2=4 A3=8
+#endif
+
+#ifndef ADS1X15_REPORT_DIGITAL
+#define ADS1X15_REPORT_DIGITAL          1       // Report Raw Digital Value
+#endif
+
+#ifndef ADS1X15_REPORT_VOLTAGE
+#define ADS1X15_REPORT_VOLTAGE          1       // Report Voltage
+#endif
+
+
+#ifndef ADS1X15_REPORT_CUSTOM
+#define ADS1X15_REPORT_CUSTOM           0       // Report Custom
+#endif
+
+#ifndef ADS1X15_A0_OFFSET
+#define ADS1X15_A0_OFFSET               0
+#endif
+
+#ifndef ADS1X15_A0_FACTOR
+#define ADS1X15_A0_FACTOR               1
+#endif
+
+#ifndef ADS1X15_A0_MAGNITUDE
+#define ADS1X15_A0_MAGNITUDE            MAGNITUDE_DIGITAL
+#endif
+
+
+#ifndef ADS1X15_A1_OFFSET
+#define ADS1X15_A1_OFFSET               0
+#endif
+
+#ifndef ADS1X15_A1_FACTOR
+#define ADS1X15_A1_FACTOR               1
+#endif
+
+#ifndef ADS1X15_A1_MAGNITUDE
+#define ADS1X15_A1_MAGNITUDE            MAGNITUDE_DIGITAL
+#endif
+
+
+#ifndef ADS1X15_A2_OFFSET
+#define ADS1X15_A2_OFFSET               0
+#endif
+
+#ifndef ADS1X15_A2_FACTOR
+#define ADS1X15_A2_FACTOR               1
+#endif
+
+#ifndef ADS1X15_A2_MAGNITUDE
+#define ADS1X15_A2_MAGNITUDE            MAGNITUDE_DIGITAL
+#endif
+
+
+#ifndef ADS1X15_A3_OFFSET
+#define ADS1X15_A3_OFFSET               0
+#endif
+
+#ifndef ADS1X15_A3_FACTOR
+#define ADS1X15_A3_FACTOR               1
+#endif
+
+#ifndef ADS1X15_A3_MAGNITUDE
+#define ADS1X15_A3_MAGNITUDE            MAGNITUDE_DIGITAL
+#endif
+
 
 //------------------------------------------------------------------------------
 // AM2320 Humidity & Temperature sensor over I2C
